@@ -28,20 +28,20 @@ Run the benchmark script for various sizes
 
 #+begin_src shell
 for N in 1000 4000 16000; do
-	hyperfine "julia +dev --project=. --startup=no mandelbrot.jl $N" 
+	hyperfine "julia +nightly --project=. --startup=no mandelbrot.jl $N" 
 done
 #+end_src
 
 #+begin_example
-Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 1000
+Benchmark 1: julia +nightly --project=. --startup=no mandelbrot.jl 1000
   Time (mean ± σ):     442.0 ms ±   4.1 ms    [User: 1110.6 ms, System: 64.5 ms]
   Range (min … max):   435.1 ms … 449.9 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 4000
+Benchmark 1: julia +nightly --project=. --startup=no mandelbrot.jl 4000
   Time (mean ± σ):     468.1 ms ±   2.9 ms    [User: 1202.0 ms, System: 65.8 ms]
   Range (min … max):   464.0 ms … 472.2 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 16000
+Benchmark 1: julia +nightly --project=. --startup=no mandelbrot.jl 16000
   Time (mean ± σ):     852.4 ms ±   5.1 ms    [User: 2620.7 ms, System: 68.1 ms]
   Range (min … max):   844.1 ms … 863.8 ms    10 runs
  
@@ -86,20 +86,20 @@ Run the benchmark script for various sizes
 
 #+begin_src shell
 for N in 500000 5000000 50000000; do
-	hyperfine "julia +dev --project=. --startup=no nbody.jl $N" 
+	hyperfine "julia +nightly --project=. --startup=no nbody.jl $N" 
 done
 #+end_src
 
 #+begin_example
-Benchmark 1: julia +dev --project=. --startup=no nbody.jl 500000
+Benchmark 1: julia +nightly --project=. --startup=no nbody.jl 500000
   Time (mean ± σ):     590.5 ms ±   7.4 ms    [User: 1142.7 ms, System: 64.9 ms]
   Range (min … max):   583.2 ms … 608.4 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no nbody.jl 5000000
+Benchmark 1: julia +nightly --project=. --startup=no nbody.jl 5000000
   Time (mean ± σ):     754.5 ms ±   5.7 ms    [User: 1314.6 ms, System: 56.3 ms]
   Range (min … max):   746.9 ms … 763.6 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no nbody.jl 50000000
+Benchmark 1: julia +nightly --project=. --startup=no nbody.jl 50000000
   Time (mean ± σ):      2.392 s ±  0.014 s    [User: 2.927 s, System: 0.079 s]
   Range (min … max):    2.373 s …  2.421 s    10 runs
 #+end_example
@@ -145,20 +145,35 @@ Run the benchmark script for various sizes
 
 #+begin_src shell 
 for N in 7 14 21; do
-	hyperfine "julia +dev --project=. --startup=no binary_trees.jl $N"
+	hyperfine "julia +nightly --project=. --startup=no binary_trees.jl $N"
 done
 #+end_src
 
 #+begin_example
-Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 7
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 7
+  Time (mean ± σ):     526.9 ms ±  23.1 ms    [User: 1180.8 ms, System: 76.6 ms]
+  Range (min … max):   508.3 ms … 576.3 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 14
+  Time (mean ± σ):     568.4 ms ±  26.1 ms    [User: 1271.9 ms, System: 81.0 ms]
+  Range (min … max):   536.7 ms … 626.8 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 21
+  Time (mean ± σ):      2.653 s ±  0.035 s    [User: 10.204 s, System: 0.733 s]
+  Range (min … max):    2.606 s …  2.697 s    10 runs
+ 
+#+end_example
+
+#+begin_example
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 7
   Time (mean ± σ):     534.7 ms ±  17.0 ms    [User: 1194.4 ms, System: 74.9 ms]
   Range (min … max):   514.2 ms … 570.7 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 14
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 14
   Time (mean ± σ):     528.3 ms ±   5.0 ms    [User: 1215.7 ms, System: 78.5 ms]
   Range (min … max):   523.2 ms … 540.1 ms    10 runs
  
-Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 21
+Benchmark 1: julia +nightly --project=. --startup=no binary_trees.jl 21
   Time (mean ± σ):      2.511 s ±  0.046 s    [User: 10.056 s, System: 0.316 s]
   Range (min … max):    2.432 s …  2.577 s    10 runs
  
