@@ -1,0 +1,392 @@
+:PROPERTIES:
+:header-args: :results scalar :exports both :prologue "alias juliac='julia +1.12 --startup=no --project=. ~/julia/contrib/juliac.jl'"
+:END:
+
+
+Following the Julia PR [[https://github.com/JuliaLang/julia/pull/55047][55047]] we now have easy Ahead-of-Time compilation of non-trivial julia programs, so I thought it'd be interesting to take a look at the impact of this PR on a somewhat famous benchmark suite https://benchmarksgame-team.pages.debian.net/benchmarksgame/index.html which is rather unfavourable to julia because it includes julia's startup and compilation time.
+
+I took a collection of julia benchmark programs from there and slightly retooled them and then compared the performance impact of running them as a script versus running them as compiled binaries. The results are quite favourable!
+
+To reproduce these results, you'll need a recently built dev-copy of julia 1.12.
+
+I did this by installing [[https://github.com/JuliaLang/juliaup][juliaup]] and then navigating to this git repo's directory and doing
+
+#+begin_src shell
+juliaup add nightly
+alias juliac-path='julia +nightly -e "print(normpath(joinpath(Sys.BINDIR, Base.DATAROOTDIR, \"julia\", \"juliac.jl\")))"'
+alias juliac="$julia +nightly --startup=no --project=. $(juliac-path)"
+julia +nightly --project=. -e "using Pkg; Pkg.instantiate()"
+#+end_src
+
+(the developer-experience of using this =juliac= compiler option is currently rather rough, but expected to improve before version 1.12 is released.)
+
+** Mandelbrot
+
+*** Without juliac:
+
+Run the benchmark script for various sizes
+
+#+begin_src shell
+for N in 1000 4000 16000; do
+	hyperfine "julia +dev --project=. --startup=no mandelbrot.jl $N" 
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 1000
+  Time (mean ± σ):     442.0 ms ±   4.1 ms    [User: 1110.6 ms, System: 64.5 ms]
+  Range (min … max):   435.1 ms … 449.9 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 4000
+  Time (mean ± σ):     468.1 ms ±   2.9 ms    [User: 1202.0 ms, System: 65.8 ms]
+  Range (min … max):   464.0 ms … 472.2 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 16000
+  Time (mean ± σ):     852.4 ms ±   5.1 ms    [User: 2620.7 ms, System: 68.1 ms]
+  Range (min … max):   844.1 ms … 863.8 ms    10 runs
+ 
+#+end_example
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe mand mandelbrot.jl
+#+end_src
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 1000 4000 16000; do
+	hyperfine "./mand $N" 
+done
+#+end_src
+
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./mand 1000
+  Time (mean ± σ):      67.6 ms ±   0.7 ms    [User: 53.9 ms, System: 34.0 ms]
+  Range (min … max):    66.5 ms …  69.6 ms    43 runs
+ 
+Benchmark 1: ./mand 4000
+  Time (mean ± σ):      98.0 ms ±   2.4 ms    [User: 378.5 ms, System: 34.8 ms]
+  Range (min … max):    94.9 ms … 102.7 ms    30 runs
+ 
+Benchmark 1: ./mand 16000
+  Time (mean ± σ):     528.4 ms ±   8.3 ms    [User: 2376.6 ms, System: 45.4 ms]
+  Range (min … max):   521.2 ms … 543.5 ms    10 runs
+#+end_example
+
+** Nbody
+
+*** Without juliac: 
+
+Run the benchmark script for various sizes
+
+#+begin_src shell
+for N in 500000 5000000 50000000; do
+	hyperfine "julia +dev --project=. --startup=no nbody.jl $N" 
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +dev --project=. --startup=no nbody.jl 500000
+  Time (mean ± σ):     590.5 ms ±   7.4 ms    [User: 1142.7 ms, System: 64.9 ms]
+  Range (min … max):   583.2 ms … 608.4 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no nbody.jl 5000000
+  Time (mean ± σ):     754.5 ms ±   5.7 ms    [User: 1314.6 ms, System: 56.3 ms]
+  Range (min … max):   746.9 ms … 763.6 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no nbody.jl 50000000
+  Time (mean ± σ):      2.392 s ±  0.014 s    [User: 2.927 s, System: 0.079 s]
+  Range (min … max):    2.373 s …  2.421 s    10 runs
+#+end_example
+
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe nb nbody.jl
+#+end_src
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 500000 5000000 50000000; do
+	hyperfine "./nb $N" 
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./nb 500000
+  Time (mean ± σ):      84.7 ms ±   1.2 ms    [User: 171.4 ms, System: 35.8 ms]
+  Range (min … max):    83.4 ms …  89.5 ms    35 runs
+ 
+Benchmark 1: ./nb 5000000
+  Time (mean ± σ):     248.0 ms ±   1.7 ms    [User: 779.8 ms, System: 38.8 ms]
+  Range (min … max):   245.7 ms … 251.7 ms    11 runs
+ 
+Benchmark 1: ./nb 50000000
+  Time (mean ± σ):      1.862 s ±  0.012 s    [User: 2.393 s, System: 0.036 s]
+  Range (min … max):    1.848 s …  1.889 s    10 runs
+#+end_example
+
+
+** Binary Trees
+
+*** Without juliac:
+
+Run the benchmark script for various sizes
+
+#+begin_src shell 
+for N in 7 14 21; do
+	hyperfine "julia +dev --project=. --startup=no binary_trees.jl $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 7
+  Time (mean ± σ):     534.7 ms ±  17.0 ms    [User: 1194.4 ms, System: 74.9 ms]
+  Range (min … max):   514.2 ms … 570.7 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 14
+  Time (mean ± σ):     528.3 ms ±   5.0 ms    [User: 1215.7 ms, System: 78.5 ms]
+  Range (min … max):   523.2 ms … 540.1 ms    10 runs
+ 
+Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 21
+  Time (mean ± σ):      2.511 s ±  0.046 s    [User: 10.056 s, System: 0.316 s]
+  Range (min … max):    2.432 s …  2.577 s    10 runs
+ 
+#+end_example
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe bt binary_trees.jl
+#+end_src
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 7 14 21; do
+	hyperfine "./bt $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./bt 7
+  Time (mean ± σ):      70.3 ms ±   1.1 ms    [User: 37.8 ms, System: 37.2 ms]
+  Range (min … max):    68.5 ms …  73.2 ms    41 runs
+ 
+Benchmark 1: ./bt 14
+  Time (mean ± σ):      86.9 ms ±   1.8 ms    [User: 207.5 ms, System: 53.8 ms]
+  Range (min … max):    85.4 ms …  94.9 ms    34 runs
+ 
+Benchmark 1: ./bt 21
+  Time (mean ± σ):      1.950 s ±  0.033 s    [User: 8.921 s, System: 0.314 s]
+  Range (min … max):    1.901 s …  1.999 s    10 runs
+ 
+#+end_example
+
+
+
+
+** Fannkuch
+
+*** Without juliac:
+
+Run the benchmark script for various sizes
+
+#+begin_src shell
+for N in 10 11 12; do
+	hyperfine "julia +nightly --project=. --startup=no fannkuch_redux.jl $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +nightly --project=. --startup=no fannkuch_redux.jl 10
+  Time (mean ± σ):     358.2 ms ±   3.2 ms    [User: 876.8 ms, System: 51.7 ms]
+  Range (min … max):   355.6 ms … 364.9 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no fannkuch_redux.jl 11
+  Time (mean ± σ):      1.521 s ±  0.013 s    [User: 2.032 s, System: 0.057 s]
+  Range (min … max):    1.497 s …  1.535 s    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no fannkuch_redux.jl 12
+  Time (mean ± σ):     17.210 s ±  0.179 s    [User: 17.661 s, System: 0.072 s]
+  Range (min … max):   16.911 s … 17.370 s    10 runs
+ 
+#+end_example
+
+
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe fann fannkuch_redux.jl
+#+end_src
+
+#+RESULTS:
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 10 11 12; do
+	hyperfine "./fann $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./fann 10
+  Time (mean ± σ):     173.5 ms ±   3.8 ms    [User: 702.7 ms, System: 39.5 ms]
+  Range (min … max):   168.3 ms … 180.5 ms    17 runs
+ 
+Benchmark 1: ./fann 11
+  Time (mean ± σ):      1.310 s ±  0.011 s    [User: 1.837 s, System: 0.037 s]
+  Range (min … max):    1.295 s …  1.330 s    10 runs
+ 
+Benchmark 1: ./fann 12
+  Time (mean ± σ):     16.643 s ±  0.065 s    [User: 17.103 s, System: 0.051 s]
+  Range (min … max):   16.579 s … 16.803 s    10 runs
+#+end_example
+
+
+** Fasta
+
+*** Without juliac:
+
+Run the benchmark script for various sizes
+
+#+begin_src shell
+for N in 250000 2500000 25000000; do
+	hyperfine "julia +nightly --project=. --startup=no fasta.jl $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +nightly --project=. --startup=no fasta.jl 250000
+  Time (mean ± σ):     324.6 ms ±   2.1 ms    [User: 834.1 ms, System: 61.4 ms]
+  Range (min … max):   322.0 ms … 329.0 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no fasta.jl 2500000
+  Time (mean ± σ):     373.1 ms ±   9.4 ms    [User: 890.3 ms, System: 53.8 ms]
+  Range (min … max):   365.8 ms … 397.4 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no fasta.jl 25000000
+  Time (mean ± σ):     803.0 ms ±   5.3 ms    [User: 1313.2 ms, System: 59.5 ms]
+  Range (min … max):   797.3 ms … 816.3 ms    10 runs
+ 
+#+end_example
+
+
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe fasta fasta.jl
+#+end_src
+
+#+RESULTS:
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 250000 2500000 25000000; do
+	hyperfine "./fasta $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./fasta 250000
+  Time (mean ± σ):      73.2 ms ±   1.6 ms    [User: 72.7 ms, System: 34.2 ms]
+  Range (min … max):    70.1 ms …  76.4 ms    40 runs
+ 
+Benchmark 1: ./fasta 2500000
+  Time (mean ± σ):     118.4 ms ±   1.9 ms    [User: 430.7 ms, System: 36.1 ms]
+  Range (min … max):   115.7 ms … 123.3 ms    25 runs
+ 
+Benchmark 1: ./fasta 25000000
+  Time (mean ± σ):     555.8 ms ±   2.5 ms    [User: 1081.2 ms, System: 41.6 ms]
+  Range (min … max):   551.6 ms … 560.3 ms    10 runs
+#+end_example
+
+** Spectral Norm
+
+*** Without juliac:
+
+Run the benchmark script for various sizes
+
+#+begin_src shell
+for N in 500 3000 5500; do
+	hyperfine "julia +nightly --project=. --startup=no spectralnorm.jl $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: julia +nightly --project=. --startup=no spectralnorm.jl 500
+  Time (mean ± σ):     587.1 ms ±   6.3 ms    [User: 1317.7 ms, System: 64.2 ms]
+  Range (min … max):   578.6 ms … 600.4 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no spectralnorm.jl 3000
+  Time (mean ± σ):     625.9 ms ±   5.7 ms    [User: 1533.9 ms, System: 64.2 ms]
+  Range (min … max):   617.6 ms … 634.6 ms    10 runs
+ 
+Benchmark 1: julia +nightly --project=. --startup=no spectralnorm.jl 5500
+  Time (mean ± σ):     720.6 ms ±   5.9 ms    [User: 2039.3 ms, System: 72.9 ms]
+  Range (min … max):   710.4 ms … 730.3 ms    10 runs
+ 
+#+end_example
+
+
+*** With juliac:
+
+Compile an executable
+
+#+begin_src shell
+juliac --output-exe spectralnorm spectralnorm.jl
+#+end_src
+
+Run the benchmark on the AOT compiled executable for various sizes
+
+#+begin_src shell
+for N in 500 3000 5500; do
+	hyperfine "./spectralnorm $N"
+done
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Benchmark 1: ./spectralnorm 500
+  Time (mean ± σ):      65.9 ms ±   1.0 ms    [User: 55.0 ms, System: 33.6 ms]
+  Range (min … max):    63.9 ms …  69.7 ms    45 runs
+ 
+Benchmark 1: ./spectralnorm 3000
+  Time (mean ± σ):     137.1 ms ±   7.6 ms    [User: 872.5 ms, System: 34.6 ms]
+  Range (min … max):   115.7 ms … 143.6 ms    21 runs
+ 
+Benchmark 1: ./spectralnorm 5500
+  Time (mean ± σ):     232.5 ms ±  10.6 ms    [User: 1475.8 ms, System: 34.3 ms]
+  Range (min … max):   209.3 ms … 243.5 ms    12 runs
+ 
+#+end_example
