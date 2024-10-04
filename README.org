@@ -1,5 +1,5 @@
 :PROPERTIES:
-:header-args: :results scalar :exports both :prologue "alias juliac='julia +1.12 --startup=no --project=. ~/julia/contrib/juliac.jl'"
+:header-args: :results scalar :export both :prologue "alias juliac='julia +1.12 --startup=no --project=. ~/julia/contrib/juliac.jl'"
 :END:
 
 
@@ -32,7 +32,6 @@ for N in 1000 4000 16000; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +dev --project=. --startup=no mandelbrot.jl 1000
   Time (mean ± σ):     442.0 ms ±   4.1 ms    [User: 1110.6 ms, System: 64.5 ms]
@@ -65,7 +64,6 @@ done
 #+end_src
 
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: ./mand 1000
   Time (mean ± σ):      67.6 ms ±   0.7 ms    [User: 53.9 ms, System: 34.0 ms]
@@ -92,7 +90,6 @@ for N in 500000 5000000 50000000; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +dev --project=. --startup=no nbody.jl 500000
   Time (mean ± σ):     590.5 ms ±   7.4 ms    [User: 1142.7 ms, System: 64.9 ms]
@@ -124,7 +121,7 @@ for N in 500000 5000000 50000000; do
 done
 #+end_src
 
-#+RESULTS:
+
 #+begin_example
 Benchmark 1: ./nb 500000
   Time (mean ± σ):      84.7 ms ±   1.2 ms    [User: 171.4 ms, System: 35.8 ms]
@@ -152,7 +149,6 @@ for N in 7 14 21; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +dev --project=. --startup=no binary_trees.jl 7
   Time (mean ± σ):     534.7 ms ±  17.0 ms    [User: 1194.4 ms, System: 74.9 ms]
@@ -184,7 +180,7 @@ for N in 7 14 21; do
 done
 #+end_src
 
-#+RESULTS:
+
 #+begin_example
 Benchmark 1: ./bt 7
   Time (mean ± σ):      70.3 ms ±   1.1 ms    [User: 37.8 ms, System: 37.2 ms]
@@ -215,7 +211,6 @@ for N in 10 11 12; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +nightly --project=. --startup=no fannkuch_redux.jl 10
   Time (mean ± σ):     358.2 ms ±   3.2 ms    [User: 876.8 ms, System: 51.7 ms]
@@ -251,7 +246,6 @@ for N in 10 11 12; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: ./fann 10
   Time (mean ± σ):     173.5 ms ±   3.8 ms    [User: 702.7 ms, System: 39.5 ms]
@@ -279,7 +273,6 @@ for N in 250000 2500000 25000000; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +nightly --project=. --startup=no fasta.jl 250000
   Time (mean ± σ):     324.6 ms ±   2.1 ms    [User: 834.1 ms, System: 61.4 ms]
@@ -315,7 +308,6 @@ for N in 250000 2500000 25000000; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: ./fasta 250000
   Time (mean ± σ):      73.2 ms ±   1.6 ms    [User: 72.7 ms, System: 34.2 ms]
@@ -342,7 +334,6 @@ for N in 500 3000 5500; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: julia +nightly --project=. --startup=no spectralnorm.jl 500
   Time (mean ± σ):     587.1 ms ±   6.3 ms    [User: 1317.7 ms, System: 64.2 ms]
@@ -375,7 +366,6 @@ for N in 500 3000 5500; do
 done
 #+end_src
 
-#+RESULTS:
 #+begin_example
 Benchmark 1: ./spectralnorm 500
   Time (mean ± σ):      65.9 ms ±   1.0 ms    [User: 55.0 ms, System: 33.6 ms]
